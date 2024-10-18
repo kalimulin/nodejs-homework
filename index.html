@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Homework</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body>
+
+<div id="app">
+  <h1>Пользователи</h1>
+  <table style="width: 100%" v-if="users && users.length">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Имя</th>
+        <th>Фамилия</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="{firstName, lastName, id} in users" :key="id">
+        <td>{{ id }}</td>
+        <td>{{ firstName }}</td>
+        <td>{{ lastName }}</td>
+        <td>
+          <a href="#" @click.prevent="deleteUser(id)">удалить</a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <hr>
+  <h1>Добавить пользователя:</h1>
+  <form action="/users" @submit.prevent="addUser">
+    <div>
+      <input type="text" placeholder="Имя" name="firstName" v-model="firstName" required />
+    </div>
+    <br>
+    <div>
+      <input type="text" placeholder="Фамилия" name="lastName" v-model="lastName" required />
+    </div>
+    <br>
+    <button type="submit">Send</button>
+  </form>
+</div>
+
+<script>
+  const { createApp } = Vue
+
+  createApp({
+    data() {
+      return {
+        firstName: '',
+        lastName: '',
+        users: []
+      }
+    },
+    created() {
+      this.getUsers()
+    },
+    methods: {
+      async getUsers () {
+        let response = await fetch('/users');
+
+        if (!response.ok) {
+          console.log("Ошибка HTTP: " + response.status)
+
+          return
+        }
+
+        this.users = await response.json()
+      },
+      async addUser () {
+        let user = {
+          firstName: this.firstName,
+          lastName: this.lastName
+        }
+
+        const response = await fetch('/users', {
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(user)
+        })
+
+        this.lastName = ''
+        this.firstName = ''
+        this.users = await response.json()
+      },
+      async deleteUser (id) {
+        const response = await fetch(`/users/${id}`, {
+          method: 'DELETE'
+        })
+
+        this.users = await response.json()
+      }
+    }
+  }).mount('#app')
+</script>
+
+</body>
+</html>
